@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BeatFlow | Independent Artist Music Licensing DAW</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="BeatFlow is an independent artist music licensing marketplace and digital audio workspace player. Purchase licenses, calculate royalty splits, and browse high-quality tracks with real-time frequency visualizers.">
+  <meta name="keywords" content="music licensing, audio player, visualizer, royalty splits, beat store, producer market, independent artist, indexedDB">
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Icons via Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- APP CONTAINER -->
+  <div id="app-container">
+
+    <!-- SIDEBAR (Filters & Artist Dashboard) -->
+    <aside class="sidebar">
+      
+      <!-- FILTER PANEL WIDGET -->
+      <div class="widget" id="filter-widget">
+        <h2 class="widget-title">
+          <span>Filter Music</span>
+          <i data-lucide="sliders-horizontal" class="logo-icon"></i>
+        </h2>
+        
+        <!-- Search -->
+        <div class="filter-group">
+          <label class="filter-label" for="search-input-field">Search Catalog</label>
+          <div class="search-wrapper" style="width: 100%;">
+            <input type="text" id="search-input-field" class="search-input" placeholder="Song, Artist, or Tag...">
+            <i data-lucide="search" class="search-icon"></i>
+          </div>
+        </div>
+
+        <!-- BPM Range -->
+        <div class="filter-group">
+          <label class="filter-label">BPM Range</label>
+          <div class="range-inputs">
+            <input type="number" id="bpm-min" class="number-input" placeholder="Min" min="0">
+            <span>to</span>
+            <input type="number" id="bpm-max" class="number-input" placeholder="Max" min="0">
+          </div>
+        </div>
+
+        <!-- Key Signature select -->
+        <div class="filter-group">
+          <label class="filter-label" for="key-signature-select">Key Signature</label>
+          <select id="key-signature-select" class="select-dropdown">
+            <option value="All">All Keys</option>
+            <option value="C Major">C Major</option>
+            <option value="A Minor">A Minor</option>
+            <option value="D Major">D Major</option>
+            <option value="E Minor">E Minor</option>
+            <option value="F# Minor">F# Minor</option>
+            <option value="C# Minor">C# Minor</option>
+            <option value="G Major">G Major</option>
+            <option value="F Major">F Major</option>
+          </select>
+        </div>
+
+        <!-- Genres -->
+        <div class="filter-group">
+          <label class="filter-label">Genres</label>
+          <div class="genre-tags" id="genre-tags-list">
+            <span class="genre-tag active" data-genre="All">All</span>
+            <span class="genre-tag" data-genre="Lo-Fi Hip Hop">Lo-Fi</span>
+            <span class="genre-tag" data-genre="Alternative Rock">Alt Rock</span>
+            <span class="genre-tag" data-genre="EDM">EDM</span>
+            <span class="genre-tag" data-genre="Pop">Pop</span>
+            <span class="genre-tag" data-genre="Dance-Pop">Dance-Pop</span>
+            <span class="genre-tag" data-genre="Synth-Pop">Synth-Pop</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ARTIST ROYALTY CALCULATOR WIDGET -->
+      <div class="widget" id="royalty-widget">
+        <h2 class="widget-title">
+          <span>Royalty Splits</span>
+          <i data-lucide="calculator" class="logo-icon"></i>
+        </h2>
+        <div class="royalty-split-inputs">
+          <div class="filter-group">
+            <label class="filter-label" for="simulated-sale-price">Simulated License Payout ($)</label>
+            <input type="number" id="simulated-sale-price" class="number-input" value="100" min="0">
+          </div>
+          
+          <div class="royalty-row">
+            <label for="split-producer">Producer</label>
+            <input type="number" id="split-producer" class="percentage-input" value="50" min="0" max="100">%
+            <input type="range" id="slider-producer" class="royalty-slider" value="50" min="0" max="100">
+          </div>
+
+          <div class="royalty-row">
+            <label for="split-vocalist">Vocalist</label>
+            <input type="number" id="split-vocalist" class="percentage-input" value="30" min="0" max="100">%
+            <input type="range" id="slider-vocalist" class="royalty-slider" value="30" min="0" max="100">
+          </div>
+
+          <div class="royalty-row">
+            <label for="split-writer">Writer</label>
+            <input type="number" id="split-writer" class="percentage-input" value="20" min="0" max="100">%
+            <input type="range" id="slider-writer" class="royalty-slider" value="20" min="0" max="100">
+          </div>
+
+          <div class="royalty-result">
+            <div class="result-item">
+              <span>Producer Share:</span>
+              <span id="payout-producer">$50.00</span>
+            </div>
+            <div class="result-item">
+              <span>Vocalist Share:</span>
+              <span id="payout-vocalist">$30.00</span>
+            </div>
+            <div class="result-item">
+              <span>Writer Share:</span>
+              <span id="payout-writer">$20.00</span>
+            </div>
+            <div class="result-item total">
+              <span>Total Split:</span>
+              <span id="payout-total-percent">100%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STREAM STATISTICS WIDGET -->
+      <div class="widget" id="stats-widget">
+        <h2 class="widget-title">
+          <span>Stream Metrics</span>
+          <i data-lucide="trending-up" class="logo-icon"></i>
+        </h2>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-val" id="total-stream-val">0</div>
+            <div class="stat-lbl">Plays</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="est-royalties-val">$0.00</div>
+            <div class="stat-lbl">Royalties</div>
+          </div>
+        </div>
+        <button class="btn btn-secondary" id="simulate-streams-btn" style="width: 100%; justify-content: center; font-size: 0.8rem; padding: 6px 12px; border-radius: 8px; margin-top: 4px;">
+          <i data-lucide="plus"></i>
+          <span>Simulate +50K Streams</span>
+        </button>
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">
+          Streaming rate estimated at $0.004 per play.
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="main-content">
+      
+      <!-- app header -->
+      <header class="app-header">
+        <div class="logo-section">
+          <h1>
+            <i data-lucide="music-4" class="logo-icon"></i>
+            <span>BeatFlow</span>
+          </h1>
+        </div>
+        
+        <div class="header-actions">
+          <button class="btn btn-primary" id="open-upload-btn">
+            <i data-lucide="upload-cloud"></i>
+            <span>Upload Track</span>
+          </button>
+          
+          <button class="btn btn-secondary cart-btn" id="open-cart-btn" aria-label="Open Licensing Cart">
+            <i data-lucide="shopping-cart"></i>
+            <span class="cart-count" id="cart-badge-count">0</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Music catalog browsing grid -->
+      <section class="catalog-section">
+        <h2 class="catalog-section-title">Music Marketplace</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+          Find and purchase production rights for high-quality beats. Preview with real-time waveform EQ.
+        </p>
+
+        <!-- Music grid container -->
+        <div class="catalog-grid" id="music-catalog-grid">
+          <!-- Dynamically populated by app.js -->
+        </div>
+      </section>
+
+    </main>
+
+    <!-- SLIDING SHELF: LICENSE CART -->
+    <div class="sliding-shelf" id="cart-shelf">
+      <div class="shelf-header">
+        <h3 class="shelf-title">Licensing Cart</h3>
+        <button class="shelf-close-btn" id="close-cart-btn" aria-label="Close Cart">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="shelf-body" id="cart-shelf-body">
+        <!-- Dynamically filled with cart item templates or empty message -->
+      </div>
+
+      <div class="checkout-footer" id="cart-checkout-section">
+        <div class="cart-summary-row">
+          <span>Items:</span>
+          <span id="checkout-items-count">0</span>
+        </div>
+        <div class="cart-summary-row total">
+          <span>Total Price:</span>
+          <span id="checkout-total-price">$0.00</span>
+        </div>
+        
+        <div class="checkout-input-group">
+          <label for="buyer-name-field">Customer Name (for contract signing)</label>
+          <input type="text" id="buyer-name-field" class="checkout-input" placeholder="e.g. DJ Pioneer / Beat Records">
+        </div>
+
+        <button class="btn btn-primary" id="checkout-btn" style="width: 100%; justify-content: center; border-radius: 12px; padding: 12px;">
+          <i data-lucide="wallet"></i>
+          <span>Checkout & Sign Contracts</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- SLIDING SHELF: PLAYBACK QUEUE -->
+    <div class="sliding-shelf" id="queue-shelf">
+      <div class="shelf-header">
+        <h3 class="shelf-title">Playback Queue</h3>
+        <button class="shelf-close-btn" id="close-queue-btn" aria-label="Close Queue">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="shelf-body" id="queue-shelf-body">
+        <!-- Dynamically filled with queue item templates or empty state -->
+      </div>
+
+      <div class="checkout-footer">
+        <button class="btn btn-secondary" id="clear-queue-btn" style="width: 100%; justify-content: center; border-radius: 8px;">
+          <i data-lucide="trash-2"></i>
+          <span>Clear Queue</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PERSISTENT FOOTER AUDIO PLAYER -->
+  <footer class="audio-player">
+    
+    <!-- Left Info Section -->
+    <div class="player-info-segment">
+      <div class="player-art-wrapper">
+        <img src="data:image/svg+xml;charset=utf-8,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' width%3D'100' height%3D'100' viewBox%3D'0%3D0%3D100%3D100'%3E%3Crect width%3D'100%25' height%3D'100%25' fill%3D'%23140d22'%2F%3E%3C%2Fsvg%3E" alt="Cover Art" class="player-art" id="current-player-art">
+      </div>
+      <div class="player-track-details">
+        <div class="player-title" id="current-player-title">Not Playing</div>
+        <div class="player-artist" id="current-player-artist">Choose a track</div>
+        <div class="player-stats-badge" id="current-player-meta" style="display: none;">120 BPM • C# Minor</div>
+      </div>
+    </div>
+
+    <!-- Center Playback Controls Section -->
+    <div class="player-controls-segment">
+      
+      <!-- Audio Element (hidden browser player) -->
+      <audio id="main-audio-node" preload="auto"></audio>
+
+      <div class="playback-buttons">
+        <button class="control-btn" id="shuffle-btn" title="Shuffle Playback" aria-label="Shuffle">
+          <i data-lucide="shuffle"></i>
+        </button>
+        <button class="control-btn" id="prev-btn" title="Previous Track" aria-label="Previous">
+          <i data-lucide="skip-back"></i>
+        </button>
+        <button class="control-btn play-pause-btn" id="play-btn" title="Play / Pause" aria-label="Play or Pause">
+          <i data-lucide="play" id="play-icon-state"></i>
+        </button>
+        <button class="control-btn" id="next-btn" title="Next Track" aria-label="Next">
+          <i data-lucide="skip-forward"></i>
+        </button>
+        <button class="control-btn" id="repeat-btn" title="Repeat Track" aria-label="Repeat">
+          <i data-lucide="repeat"></i>
+        </button>
+      </div>
+
+      <div class="timeline-wrapper">
+        <span class="time-stamp" id="current-time-val">0:00</span>
+        <div class="progress-bar-container" id="player-progress-bar-wrapper">
+          <input type="range" id="seek-slider" class="slider-input" min="0" max="100" value="0">
+        </div>
+        <span class="time-stamp right" id="duration-time-val">0:00</span>
+      </div>
+
+    </div>
+
+    <!-- Right Utilities Section -->
+    <div class="player-utilities-segment">
+      
+      <!-- Waveform frequency visualizer canvas -->
+      <div class="visualizer-container">
+        <canvas class="visualizer-canvas" id="eq-canvas"></canvas>
+      </div>
+
+      <div class="volume-wrapper">
+        <button class="control-btn" id="mute-btn" aria-label="Mute Volume">
+          <i data-lucide="volume-2" id="volume-icon-state"></i>
+        </button>
+        <input type="range" id="volume-slider" class="volume-slider" min="0" max="1" step="0.05" value="0.7">
+      </div>
+
+      <button class="control-btn" id="toggle-queue-btn" title="Show Playback Queue" aria-label="Toggle Queue">
+        <i data-lucide="list-music"></i>
+      </button>
+
+    </div>
+
+  </footer>
+
+  <!-- MODAL: SONG UPLOADER -->
+  <div class="modal-overlay" id="upload-modal">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 class="modal-title">Upload New Beat / Song</h3>
+        <button class="modal-close-btn" id="close-upload-modal" aria-label="Close Uploader">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      
+      <!-- Drag & Drop Uploader form -->
+      <form id="track-upload-form" onsubmit="return false;">
+        
+        <!-- Drag zones -->
+        <div class="drag-drop-zone" id="audio-drop-zone">
+          <i data-lucide="music" class="drag-drop-icon"></i>
+          <p class="drag-drop-text" id="audio-drop-text">Drag & drop audio files here or click to browse</p>
+          <span class="drag-drop-subtext">Supports MP3, WAV files</span>
+          <input type="file" id="audio-file-input" accept="audio/mp3, audio/wav, audio/mpeg" style="display: none;">
+          <div class="file-status-indicator" id="audio-file-status"></div>
+        </div>
+
+        <div class="drag-drop-zone" id="art-drop-zone" style="margin-top: 12px; padding: 20px 10px;">
+          <i data-lucide="image" class="drag-drop-icon" style="font-size: 1.6rem;"></i>
+          <p class="drag-drop-text" id="art-drop-text" style="font-size: 0.85rem;">Drag & drop cover artwork or click to browse</p>
+          <span class="drag-drop-subtext" style="font-size: 0.7rem;">JPG, PNG (square recommended)</span>
+          <input type="file" id="art-file-input" accept="image/jpeg, image/png" style="display: none;">
+          <div class="cover-preview-wrapper" id="cover-art-preview-box" style="display: none; margin-top: 10px; width: 100%;">
+            <img src="" alt="Art Preview" id="cover-art-preview-img" class="cover-preview-art">
+            <div class="cover-preview-info">
+              <span id="cover-preview-filename" style="font-size: 0.8rem; font-weight: 500;"></span>
+              <span style="font-size: 0.7rem; color: var(--text-muted);">Loaded successfully</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Track fields -->
+        <div class="form-grid">
+          <div class="form-input-group form-group-full">
+            <label for="track-title-field">Track Title *</label>
+            <input type="text" id="track-title-field" class="form-input" placeholder="e.g. Sunset Boulevard" required>
+          </div>
+          
+          <div class="form-input-group">
+            <label for="track-artist-field">Artist Name *</label>
+            <input type="text" id="track-artist-field" class="form-input" placeholder="e.g. Lofi Prodigy" required>
+          </div>
+
+          <div class="form-input-group">
+            <label for="track-genre-field">Genre *</label>
+            <select id="track-genre-field" class="form-input" style="background: var(--bg-deep);" required>
+              <option value="Lo-Fi Hip Hop">Lo-Fi Hip Hop</option>
+              <option value="Alternative Rock">Alternative Rock</option>
+              <option value="EDM">EDM</option>
+              <option value="Pop">Pop</option>
+              <option value="Dance-Pop">Dance-Pop</option>
+              <option value="Synth-Pop">Synth-Pop</option>
+            </select>
+          </div>
+
+          <div class="form-input-group">
+            <label for="track-bpm-field">Tempo (BPM) *</label>
+            <input type="number" id="track-bpm-field" class="form-input" placeholder="e.g. 95" min="1" required>
+          </div>
+
+          <div class="form-input-group">
+            <label for="track-key-field">Key Signature *</label>
+            <select id="track-key-field" class="form-input" style="background: var(--bg-deep);" required>
+              <option value="C Major">C Major</option>
+              <option value="A Minor">A Minor</option>
+              <option value="D Major">D Major</option>
+              <option value="E Minor">E Minor</option>
+              <option value="F# Minor">F# Minor</option>
+              <option value="C# Minor">C# Minor</option>
+              <option value="G Major">G Major</option>
+              <option value="F Major">F Major</option>
+            </select>
+          </div>
+
+          <!-- Prices -->
+          <div class="form-input-group">
+            <label for="price-standard-field">Standard License Price ($) *</label>
+            <input type="number" id="price-standard-field" class="form-input" value="29.99" min="0.01" step="0.01" required>
+          </div>
+
+          <div class="form-input-group">
+            <label for="price-premium-field">Premium License Price ($) *</label>
+            <input type="number" id="price-premium-field" class="form-input" value="59.99" min="0.01" step="0.01" required>
+          </div>
+
+          <div class="form-input-group form-group-full">
+            <label for="price-exclusive-field">Exclusive Rights Price ($) *</label>
+            <input type="number" id="price-exclusive-field" class="form-input" value="299.99" min="0.01" step="0.01" required>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn" id="cancel-upload-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="submit-upload-btn">
+            <i data-lucide="plus"></i>
+            <span>Add Beat to Catalog</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: LEGAL CONTRACT VIEW -->
+  <div class="modal-overlay" id="contract-modal">
+    <div class="modal-window" style="max-width: 650px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Digital License Agreement</h3>
+        <button class="modal-close-btn" id="close-contract-modal" aria-label="Close Contracts">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="contract-viewer" id="contract-viewer-body">
+        <!-- Populated dynamically with contract layout -->
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="window.print()">
+          <i data-lucide="printer"></i>
+          <span>Print Contract</span>
+        </button>
+        <button class="btn btn-primary" id="confirm-contract-btn">
+          <i data-lucide="check"></i>
+          <span>Accept & Download License</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- SCRIPTS -->
+  <script src="db.js"></script>
+  <script src="visualizer.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
